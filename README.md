@@ -7,8 +7,8 @@
 * Database Design (My SQL)
 * Setting up Apache Server in Ubuntu VM
 ## Hardware used:
--Raspberry Pi 4
--RC522 RFID Sensor
+- Raspberry Pi 4
+- RC522 RFID Sensor
 
 ## Configure the Rasperry Pi4:
 
