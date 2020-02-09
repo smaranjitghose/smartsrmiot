@@ -3,15 +3,15 @@ import serial
 import mysql.connector as mysql
 
 db=mysql.conection(
-	host=''
-	user=''
-	passwd=''
-	database='')
+	host='10.0.2.15'
+	user='swat'
+	passwd='helloworld'
+	database='students')
 
 corsor=db.corsor()
 
 class timer:
-	__init__(self)
+	def __init__(self)
 		t=300
 		while t!=0:
 			time.sleep(1)
@@ -19,7 +19,8 @@ class timer:
 			return t
 
 class id_pull:
-	__init__(self)
+	def __init__(self)
+		device_id=001
 		data = serial.Serial(
 			port=dev/ttyS0
 			baudrate=9600
@@ -36,4 +37,6 @@ class id_pull:
 				corsor.execute('')
 			elif x.isalnum == true && timer()!=0:
 				#sql_code
-				corsor.execute('')
+				time_stamp=time.time()
+				input_data=(timestamp,device_id)
+				corsor.execute('',input_data)
