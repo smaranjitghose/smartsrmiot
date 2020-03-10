@@ -1,42 +1,57 @@
+from typing import List
+from firebase import firebase
+import RPi.GPIO as GPIO
 import time
-import serial
-import mysql.connector as mysql
+import subprocess
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
 
-db=mysql.conection(
-	host='10.0.2.15'
-	user='swat'
-	passwd='helloworld'
-	database='students')
 
-corsor=db.corsor()
+def main():
+    # initializing firebase cred
+    cred = credentials.Certificate("path/to/serviceAccountKey.json")
+    firebase_admin.initialize_app(cred)
+    # database init
+    ref_stud = db.collection('STUDENT')
+    ref_faculty = db.collection('FACULTY')
+    # code for attendance grant
+    device_id = "TP000"
+    time_window = 10
+    while 1:
+        doc_faculty = ref_faculty.document('FACULTY')
+        doc_stud = ref_stud.document('STUDENT')
+        if get_nfc_id() in doc_faculty.values():
+            start_time = time.time()
+            present_id = get_nfc_id()
+            if time.time() - start_time <= time_window and present_id in doc_stud.value():
+                str_id_p = str(present_id)
+                time_now = time.time()
+                data_ifPresent = {"DEVICE ID": device_id, "ID": str_id_p, "BOOLEAN VALUE": 'true', "TIME STAMP": time_now}
+                ref_stud.reset(data_ifPresent)
+                print(data_ifPresent)
 
-class timer:
-	def __init__(self)
-		t=300
-		while t!=0:
-			time.sleep(1)
-			t=t-1
-			return t
 
-class id_pull:
-	def __init__(self)
-		device_id=001
-		data = serial.Serial(
-			port=dev/ttyS0
-			baudrate=9600
-			parity=serial.PARITY_NONE
-			stopbyte=serial.SOTPBBITS_ONE
-			bytesize=serial.EIGHTBIT)
+def get_nfc_id():
+    while 1:  # later this will contain the class( distinguished by DEVICE ID) information
+        myLines = get_nfc_out()
+        buffer = []
+        for line in myLines.splitlines():
+            line_content = line.split()
+            if not line_content[0] == 'UID':
+                pass
+            else:
+                buffer.append(line_content)
+        str = buffer[0]
+        id_str = str[2] + str[3] + str[4] + str[5]
+        return id_str
 
-		while 1:
-			x = data.read(12)
-			if x.isnumeric == true:
-				#timer_initialize
-				timer()
-				#sql_code
-				corsor.execute('')
-			elif x.isalnum == true && timer()!=0:
-				#sql_code
-				time_stamp=time.time()
-				input_data=(timestamp,device_id)
-				corsor.execute('',input_data)
+
+def get_nfc_out():
+    lines = raw_nfc()
+    return lines
+
+
+def raw_nfc():
+    lines = subprocess.check_output("usr/bin/nfc-poll", stderr=open('/dev/null', 'w'))
+    return lines
