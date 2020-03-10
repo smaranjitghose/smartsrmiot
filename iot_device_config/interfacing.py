@@ -1,39 +1,41 @@
-from typing import List
 from firebase import firebase
 import RPi.GPIO as GPIO
 import time
 import subprocess
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import db
+
+n = 3 # number of students in the class
+device_id = "TP000"
+time_window = 10
 
 
-def main():
-    # initializing firebase cred
-    cred = credentials.Certificate("path/to/serviceAccountKey.json")
-    firebase_admin.initialize_app(cred)
-    # database init
-    ref_stud = db.collection('STUDENT')
-    ref_faculty = db.collection('FACULTY')
-    # code for attendance grant
-    device_id = "TP000"
-    time_window = 10
-    while 1:
-        doc_faculty = ref_faculty.document('FACULTY')
-        doc_stud = ref_stud.document('STUDENT')
-        if get_nfc_id() in doc_faculty.values():
-            start_time = time.time()
-            present_id = get_nfc_id()
-            if time.time() - start_time <= time_window and present_id in doc_stud.value():
+def update_fire():
+    firebase = firebase.FirebaseApplication('https://iot-studentreg.firebaseio.com/', None)
+    ref_faculty = firebase.get('Faculty/All_ID', None)
+    ref_faculty_val = ref_faculty.value()
+    ref_stud = firebase.get('Student/Attendance/All_ID', None)
+    ref_stud_val = ref_stud.value()
+    if get_nfc_id() in ref_faculty_val:
+        start_time = time.time()
+        present_id = get_nfc_id()
+        for i in range(n):
+            if time.time() - start_time <= time_window and present_id in ref_stud_val:
                 str_id_p = str(present_id)
-                time_now = time.time()
-                data_ifPresent = {"DEVICE ID": device_id, "ID": str_id_p, "BOOLEAN VALUE": 'true', "TIME STAMP": time_now}
-                ref_stud.reset(data_ifPresent)
+                data_ifPresent = {"ID": str_id_p, "PRESENT": 'true', "TIME STAMP": time.time()}
+                firebase.post('Student/Attendance/s' + str(i), data_ifPresent)
                 print(data_ifPresent)
+                print('Above data entered')
+            elif time.time() - start_time > time_window:
+                for ids in ref_stud_val:
+                    data_notPresent = {"ID": ids, "PRESENT": 'false', "TIME STAMP": time.time()}
+                    firebase.post('Student/Attendance/s' + str(i), data_notPresent)
+                    print(data_notPresent)
+                    print('Above data is submitted')
+            elif present_id not in ref_stud_val or present_id not in ref_faculty_val:
+                print('Unidentified ID, no data is submitted')
 
 
 def get_nfc_id():
-    while 1:  # later this will contain the class( distinguished by DEVICE ID) information
+    while 1:  # later this will contain the class (distinguished by DEVICE ID) information
         myLines = get_nfc_out()
         buffer = []
         for line in myLines.splitlines():
