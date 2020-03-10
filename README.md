@@ -8,7 +8,7 @@
 * Setting up Apache Server in Ubuntu VM
 ## Hardware used:
 - Raspberry Pi 4
-- RC522 RFID Sensor
+- RC532 NFC Sensor
 
 ## Configure the Rasperry Pi4:
 
